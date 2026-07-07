@@ -1,5 +1,5 @@
 "use client";
-
+import type { Map as LeafletMap } from "leaflet";
 import { useMemo, useRef, useState } from "react";
 import { MapControls } from "@/components/map/map-controls";
 import { MapLayerToggles, type MapLayer } from "@/components/map/map-layer-toggles";
@@ -22,7 +22,7 @@ export function MapExperience() {
     satellite: false,
   });
 
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
   const { pushToast } = useToast();
   const reports = useReports(500);
   const hotspots = useHotspots(300);
@@ -31,10 +31,10 @@ export function MapExperience() {
   const hotspotItems = useMemo(() => (layers.hotspots ? hotspots.data ?? [] : []), [hotspots.data, layers.hotspots]);
 
   const toggleLayer = (layer: MapLayer) => setLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
-
+const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   return (
     <div className="relative">
-      <div className="absolute left-4 top-4 z-20">
+      <div className="absolute left-4 top-4 z-[1000]">
         <MapSearch
           value={search}
           onChange={setSearch}
@@ -51,7 +51,7 @@ export function MapExperience() {
               const nextCenter = { lat: response.result.latitude, lng: response.result.longitude };
               setCenter(nextCenter);
               setZoom(14);
-              mapRef.current?.panTo(nextCenter);
+              mapRef.current?.setView([nextCenter.lat, nextCenter.lng], 14);
               pushToast("Location found", response.result.formattedAddress);
             } catch (error) {
               pushToast("Search failed", error instanceof Error ? error.message : "Unable to search location.");
@@ -60,7 +60,7 @@ export function MapExperience() {
         />
       </div>
 
-      <div className="absolute right-4 top-4 z-20">
+      <div className="absolute right-4 top-4 z-[1000]">
         <MapControls
           heatmap={heatmap}
           onToggleHeatmap={() => setHeatmap((prev) => !prev)}
@@ -72,9 +72,10 @@ export function MapExperience() {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 const nextCenter = { lat: position.coords.latitude, lng: position.coords.longitude };
+                setUserLocation(nextCenter);
                 setCenter(nextCenter);
                 setZoom(14);
-                mapRef.current?.panTo(nextCenter);
+mapRef.current?.setView([nextCenter.lat, nextCenter.lng], 14);
                 pushToast("Location updated", "Map centered on your current location.");
               },
               () => {
@@ -95,23 +96,24 @@ export function MapExperience() {
         />
       </div>
 
-      <div className="absolute bottom-4 left-4 z-20">
+      <div className="absolute bottom-4 left-4 z-[1000]">
         <MapLayerToggles active={layers} onToggle={toggleLayer} />
       </div>
+console.log("MapExperience userLocation:", userLocation);
+    <MapShell
+  heatmap={heatmap}
+  showHotspots={layers.hotspots}
+  reports={reportItems}
+  hotspots={hotspotItems}
+  center={center}
+  zoom={zoom}
+  userLocation={userLocation}
+  onMapReady={(map) => {
+    mapRef.current = map;
+  }}
+/>
 
-      <MapShell
-        heatmap={heatmap}
-        showHotspots={layers.hotspots}
-        reports={reportItems}
-        hotspots={hotspotItems}
-        center={center}
-        zoom={zoom}
-        onMapReady={(map) => {
-          mapRef.current = map;
-        }}
-      />
-
-      <div className="pointer-events-none absolute bottom-4 right-4 z-10 hidden md:block">
+      <div className="pointer-events-none absolute bottom-4 right-4 z-[1000] hidden md:block">
         <HotspotLegend />
       </div>
     </div>

@@ -32,7 +32,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function syncServerSession(user: User) {
-  const idToken = await user.getIdToken(true);
+  const idToken = await user.getIdToken();
   return apiFetch<{ user: AppUser }>("/api/v1/auth/session", {
     method: "POST",
     body: JSON.stringify({ idToken }),

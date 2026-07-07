@@ -55,7 +55,7 @@ export const firestoreRepository = {
       locale: existing?.locale ?? "en",
       language: existing?.language ?? "en",
       theme: existing?.theme ?? "system",
-      avatarUrl: existing?.avatarUrl ?? null,
+      avatarUrl: existing?.avatarUrl ?? "",
       notificationPreferences: existing?.notificationPreferences ?? { critical: true, tasks: true, digest: false },
       emailVerified: input.emailVerified ?? existing?.emailVerified ?? false,
       fcmTokens: existing?.fcmTokens ?? [],

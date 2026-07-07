@@ -11,8 +11,9 @@ function severityToTaskPriority(severity: ReportDoc["severity"]) {
 
 export const aiWorkflowService = {
   async processReport(report: ReportDoc) {
-    const storageFile = adminStorage.bucket().file(report.storagePath);
-    const [buffer] = await storageFile.download();
+    const imageResponse = await fetch(report.imageUrl);
+const arrayBuffer = await imageResponse.arrayBuffer();
+const buffer = Buffer.from(arrayBuffer);
 
     const mimeType = report.imageUrl.includes(".png")
       ? "image/png"

@@ -10,7 +10,12 @@ export interface SessionUser {
 }
 
 export async function verifySessionToken(token: string) {
-  return adminAuth.verifyIdToken(token, true);
+  try {
+    return await adminAuth.verifyIdToken(token, true);
+  } catch (err) {
+    console.error("VERIFY TOKEN FAILED:", err);
+    throw err;
+  }
 }
 
 export async function getSessionUserFromRequest(request: Request | NextRequest): Promise<SessionUser | null> {

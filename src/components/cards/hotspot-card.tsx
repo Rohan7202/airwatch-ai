@@ -7,7 +7,8 @@ import { useHotspots } from "@/features/hotspots/hooks/use-hotspots";
 
 export function HotspotCard() {
   const hotspots = useHotspots(20);
-  const hotspot = hotspots.data?.[0];
+  const hotspot = hotspots.data
+  ?.sort((a, b) => b.riskScore - a.riskScore)[0];
 
   if (!hotspot) {
     return (

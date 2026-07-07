@@ -1,3 +1,4 @@
+"use client";
 import { Activity, Gauge, Radar, Cpu } from "lucide-react";
 import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
 import { SourceContributionChart } from "@/components/charts/source-contribution-chart";
@@ -16,13 +17,8 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { PageTransition } from "@/components/ui/page-transition";
-
-const zones = [
-  { name: "Riverside Industrial Belt", value: 82 },
-  { name: "East Loop Corridor", value: 64 },
-  { name: "University District", value: 38 },
-  { name: "North Freight Yard", value: 71 },
-];
+import { useReports } from "@/features/reports/hooks/use-reports";
+import { useHotspots, usePredictions } from "@/features/hotspots/hooks/use-hotspots";
 
 const sensors = [
   { id: "Node A-17", pm: "42 µg/m³", no2: "31 ppb", status: "Online", tone: "success" as const },
@@ -32,6 +28,31 @@ const sensors = [
 ];
 
 export default function DashboardPage() {
+  const { data: reports = [] } = useReports(500);
+const { data: hotspots = [] } = useHotspots(500);
+const { data: predictions = [] } = usePredictions(500);
+
+const totalReports = reports.length;
+
+const activeHotspots = hotspots.filter(
+  (h) => h.status === "active"
+).length;
+
+const avgAQI =
+  hotspots.length > 0
+    ? Math.round(
+        hotspots.reduce((sum, h) => sum + h.latestAqi, 0) /
+          hotspots.length
+      )
+    : 0;
+
+const highSeverity = reports.filter(
+  (r) => r.severity === "high" || r.severity === "critical"
+).length;
+const zones = hotspots.slice(0, 4).map((h) => ({
+  name: h.title,
+  value: h.riskScore,
+}));
   return (
     <PageTransition>
       <section className="space-y-6">
@@ -42,12 +63,55 @@ export default function DashboardPage() {
           actions={<DashboardActions />}
         />
 
-        <KpiGrid />
+       <div className="grid gap-4 md:grid-cols-4">
+  <StatisticsCard
+    label="Total Reports"
+    value={totalReports.toString()}
+    trend={`${highSeverity} High Risk`}
+    icon={Activity}
+  />
+
+  <StatisticsCard
+    label="Active Hotspots"
+    value={activeHotspots.toString()}
+    trend="Live"
+    icon={Radar}
+  />
+
+  <StatisticsCard
+    label="Average AQI"
+    value={avgAQI.toString()}
+    trend="Realtime"
+    icon={Gauge}
+  />
+
+  <StatisticsCard
+    label="AI Predictions"
+    value={predictions.length.toString()}
+    trend="Generated"
+    icon={Cpu}
+  />
+</div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <StatisticsCard label="Forecasted AQI peak" value="112" trend="+4.2% by 14:00" icon={Radar} />
-          <StatisticsCard label="Average PM2.5" value="41 µg/m³" trend="-6.4% this week" icon={Gauge} />
-          <StatisticsCard label="Signal density" value="High" trend="128 events / day" icon={Activity} />
+          <StatisticsCard
+  label="Forecasted AQI Peak"
+  value={predictions[0]?.predictedAqi?.toString() ?? "--"}
+  trend="Latest AI Prediction"
+  icon={Radar}
+/>
+          <StatisticsCard
+  label="Latest Prediction"
+value={predictions[0]?.predictedAqi?.toString() ?? "--"}
+trend="AI Forecast"
+icon={Radar}
+/>
+          <StatisticsCard
+  label="High Severity Reports"
+  value={highSeverity.toString()}
+  trend="Realtime"
+  icon={Activity}
+/>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3">
@@ -86,15 +150,15 @@ export default function DashboardPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <AiInsightCard
-            title="Dispersion outlook"
-            insight="Wind shear is likely to carry industrial particulates southeast over the next 5 hours, affecting 3 dense neighborhoods."
-            confidence="92%"
-          />
+  title="Dispersion outlook"
+  insight={predictions[0]?.explanation ?? "No prediction available"}
+  confidence={`${Math.round((predictions[0]?.confidence ?? 0) * 100)}%`}
+/>
           <AiInsightCard
-            title="Recommended action"
-            insight="Prioritize field inspection at Riverside Industrial Belt and pre-position mobile sensor van in school buffer zone."
-            confidence="89%"
-          />
+  title="Recommended action"
+  insight={hotspots[0]?.recommendedAction ?? "No recommendation available"}
+  confidence={`${hotspots[0]?.riskScore ?? 0}%`}
+/>
         </div>
 
         <Card className="p-6">

@@ -8,31 +8,48 @@ export interface GeocodeResult {
   longitude: number;
 }
 
-export async function geocodeAddress(request: GeocodeRequest): Promise<GeocodeResult | null> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey || !request.address.trim()) return null;
+export async function geocodeAddress(
+  request: GeocodeRequest,
+): Promise<GeocodeResult | null> {
+  try {
+    if (!request.address.trim()) return null;
 
-  const endpoint = new URL("https://maps.googleapis.com/maps/api/geocode/json");
-  endpoint.searchParams.set("address", request.address);
-  endpoint.searchParams.set("key", apiKey);
+    const endpoint = new URL("https://nominatim.openstreetmap.org/search");
 
-  const response = await fetch(endpoint.toString(), { method: "GET" });
-  if (!response.ok) return null;
+    endpoint.searchParams.set("q", request.address);
+    endpoint.searchParams.set("format", "jsonv2");
+    endpoint.searchParams.set("limit", "1");
 
-  const json = (await response.json()) as {
-    status: string;
-    results?: Array<{
-      formatted_address: string;
-      geometry: { location: { lat: number; lng: number } };
+    const response = await fetch(endpoint.toString(), {
+      headers: {
+        "User-Agent": "AirWatchAI/1.0",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    console.log("Status:", response.status);
+
+    const text = await response.text();
+    console.log("Body:", text);
+
+    if (!response.ok) return null;
+
+    const json = JSON.parse(text) as Array<{
+      display_name: string;
+      lat: string;
+      lon: string;
     }>;
-  };
 
-  if (json.status !== "OK" || !json.results?.[0]) return null;
+    if (!json.length) return null;
 
-  const result = json.results[0];
-  return {
-    formattedAddress: result.formatted_address,
-    latitude: result.geometry.location.lat,
-    longitude: result.geometry.location.lng,
-  };
+    return {
+      formattedAddress: json[0].display_name,
+      latitude: Number(json[0].lat),
+      longitude: Number(json[0].lon),
+    };
+  } catch (err) {
+    console.error("GEOCODE ERROR:", err);
+    return null;
+  }
 }

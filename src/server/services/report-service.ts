@@ -30,23 +30,26 @@ export const reportService = {
       throw new Error("Image must be 10MB or smaller.");
     }
 
-    const bucket = adminStorage.bucket();
-    const extension = file.name.split(".").pop() || "jpg";
-    const storagePath = `reports/${params.sessionUser.uid}/${Date.now()}.${extension}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const formData = new FormData();
 
-    const storageFile = bucket.file(storagePath);
-    await storageFile.save(buffer, {
-      metadata: {
-        contentType: file.type,
-      },
-      resumable: false,
-    });
+formData.append("file", file);
+formData.append(
+  "upload_preset",
+  process.env.CLOUDINARY_UPLOAD_PRESET!,
+);
 
-    const [imageUrl] = await storageFile.getSignedUrl({
-      action: "read",
-      expires: "2100-01-01",
-    });
+const response = await fetch(
+  `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+  {
+    method: "POST",
+    body: formData,
+  },
+);
+
+const upload = await response.json();
+
+const imageUrl = upload.secure_url;
+const storagePath = upload.public_id;
 
     const report = await firestoreRepository.createReport({
       title: params.title,

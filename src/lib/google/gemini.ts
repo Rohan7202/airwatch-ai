@@ -19,7 +19,7 @@ function normalizeAnalysis(input: Partial<GeminiAnalysis>): GeminiAnalysis {
     pollutionType,
     confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 0.5))),
     severity,
-    explanation: input.explanation?.slice(0, 240) ?? "Unable to provide a detailed explanation.",
+    explanation: input.explanation?.slice(0, 160) ?? "Unable to provide a detailed explanation.",
     suggestedMunicipalAction: input.suggestedMunicipalAction?.slice(0, 240) ?? "Dispatch an inspection team for verification.",
   };
 }
@@ -60,7 +60,8 @@ export async function analyzePollutionImageWithGemini(params: {
     `Reported severity: ${params.reportContext.severity}`,
   ].join("\n");
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const endpoint =
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -86,14 +87,25 @@ export async function analyzePollutionImageWithGemini(params: {
   });
 
   if (!response.ok) {
-    return normalizeAnalysis({
-      pollutionType: "unknown",
-      confidence: 0.4,
-      severity: "moderate",
-      explanation: `Gemini request failed with status ${response.status}.`,
-      suggestedMunicipalAction: "Perform manual verification due to temporary AI failure.",
-    });
-  }
+  console.log("Gemini Status:", response.status);
+
+  const errorText = await response.text();
+  console.log("Gemini Error:", errorText);
+
+  const explanation =
+  response.status === 503
+    ? "Gemini AI is temporarily unavailable due to high demand. Your report has been saved successfully and can be analyzed again later."
+    : `AI analysis is currently unavailable (Error ${response.status}).`;
+
+return normalizeAnalysis({
+  pollutionType: "unknown",
+  confidence: 0.4,
+  severity: "moderate",
+  explanation,
+  suggestedMunicipalAction:
+    "Continue monitoring and perform manual verification until AI analysis becomes available.",
+});
+}
 
   const json = (await response.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;

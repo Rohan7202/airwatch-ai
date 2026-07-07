@@ -2,46 +2,70 @@
 
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-
-const data = [48, 56, 62, 58, 66, 72, 86, 79, 74, 70, 65, 61];
+import { usePredictions } from "@/features/hotspots/hooks/use-hotspots";
 
 export function AqiTrendChart() {
-  const max = Math.max(...data);
-  const peak = data.indexOf(max);
+  const { data: predictions = [] } = usePredictions(12);
+
+  const data =
+    predictions.length > 0
+      ? [...predictions].reverse().map((p) => p.predictedAqi)
+      : [];
+
+  const max = Math.max(...data, 1);
+ 
 
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold">24-hour AQI trend</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Neighborhood composite index · updated 5 min ago</p>
+          <h3 className="text-base font-semibold">
+            24-hour AQI Trend
+          </h3>
+
+          <p className="text-xs text-slate-500">
+            Live AI predictions
+          </p>
         </div>
-        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-          Peak {max} at {peak * 2}:00
+
+        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+          Peak {Math.max(...data, 0)}
         </span>
       </div>
 
-      <div className="flex h-52 items-end gap-2">
-        {data.map((value, index) => (
-          <motion.div
-            key={index}
-            className="group relative flex-1"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: `${(value / max) * 100}%`, opacity: 1 }}
-            transition={{ duration: 0.7, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div
-              className={`h-full w-full rounded-t-lg bg-gradient-to-t ${
-                value > 80 ? "from-rose-500 to-amber-400" : value > 60 ? "from-amber-400 to-sky-400" : "from-sky-500 to-emerald-400"
-              } transition group-hover:brightness-110`}
-            />
-            <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100 dark:bg-slate-700">
-              {value}
-            </span>
-            <span className="mt-2 block text-center text-[10px] text-slate-500 dark:text-slate-400">{index * 2}h</span>
-          </motion.div>
-        ))}
-      </div>
+      {data.length === 0 ? (
+        <div className="flex h-52 items-center justify-center text-sm text-slate-500">
+          No prediction data
+        </div>
+      ) : (
+        <div className="flex h-52 items-end gap-3">
+          {data.map((value, index) => (
+   <div
+  key={index}
+  className="flex flex-col justify-end items-center h-full"
+>
+  <div
+  style={{
+    width: "48px",
+    height: `${(value / max) * 180}px`,
+    background:
+      value >= 150
+        ? "#ef4444"
+        : value >= 100
+        ? "#fb923c"
+        : value >= 60
+        ? "#facc15"
+        : "#22c55e",
+    borderRadius: "8px 8px 0 0",
+  }}
+/>
+              <span className="mt-2 text-[10px] text-slate-500">
+                {index + 1}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

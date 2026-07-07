@@ -5,7 +5,7 @@ import { badRequest } from "@/server/security/http";
 import { enforceRequestRateLimit } from "@/lib/api/guard";
 
 export async function POST(request: Request) {
-  const limited = enforceRequestRateLimit(request, 50, 60_000);
+  const limited = enforceRequestRateLimit(request, 1000, 60_000);
   if (limited) return limited;
 
   try {
