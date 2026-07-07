@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == 'administrator';
+    }
+
+    function isMunicipal() {
+      return isSignedIn() && (userRole() == 'municipal_officer' || userRole() == 'administrator');
+    }
+
+    match /Users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false;
+    }
+
+    match /Reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isMunicipal() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /Hotspots/{id} {
+      allow read: if isSignedIn();
+      allow write: if isMunicipal();
+    }
+
+    match /Predictions/{id} {
+      allow read: if isSignedIn();
+      allow write: if isMunicipal();
+    }
+
+    match /Notifications/{id} {
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /MunicipalTasks/{id} {
+      allow read: if isMunicipal();
+      allow write: if isMunicipal();
+    }
+
+    match /Sensors/{id} {
+      allow read: if isSignedIn();
+      allow write: if isMunicipal();
+    }
+
+    match /SystemSettings/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

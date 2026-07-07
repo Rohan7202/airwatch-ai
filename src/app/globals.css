@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f8ff;
+  --foreground: #0a1020;
+  --card: rgba(255, 255, 255, 0.62);
+  --card-border: rgba(255, 255, 255, 0.75);
+  --muted: #5f6b85;
+  --accent: #0ea5e9;
+  --success: #059669;
+  --ring: rgba(14, 165, 233, 0.55);
+  --radius: 1rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #e8eefc;
+  --card: rgba(15, 23, 42, 0.6);
+  --card-border: rgba(148, 163, 184, 0.22);
+  --muted: #9fb0d1;
+  --accent: #38bdf8;
+  --success: #34d399;
+  --ring: rgba(56, 189, 248, 0.55);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+* {
+  @apply border-slate-200 dark:border-slate-800;
+}
+
+html,
+body {
+  @apply scroll-smooth antialiased;
+}
+
+body {
+  @apply bg-background text-foreground;
+  background-image:
+    radial-gradient(circle at 12% 12%, rgba(14, 165, 233, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 8%, rgba(16, 185, 129, 0.14), transparent 30%),
+    radial-gradient(circle at 72% 82%, rgba(99, 102, 241, 0.12), transparent 34%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-manrope), ui-sans-serif, system-ui;
+  @apply tracking-tight;
+}
+
+.glass {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass-strong {
+  background: rgba(2, 6, 23, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.gradient-text {
+  background: linear-gradient(95deg, #0ea5e9 0%, #6366f1 45%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-hover {
+  @apply transition-all duration-300 will-change-transform;
+}
+
+.card-hover:hover {
+  @apply -translate-y-1 shadow-2xl shadow-sky-500/10;
+}
+
+:focus-visible {
+  @apply outline-none ring-2 ring-sky-500 ring-offset-2 ring-offset-background;
+}
+
+::selection {
+  background: rgba(14, 165, 233, 0.25);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
