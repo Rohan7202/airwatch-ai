@@ -1,3 +1,4 @@
+"use client";
 import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren } from "lucide-react";
 import { NotificationCard } from "@/components/cards/notification-card";
