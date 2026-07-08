@@ -1,9 +1,13 @@
+import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren } from "lucide-react";
 import { NotificationCard } from "@/components/cards/notification-card";
 import { StatisticsCard } from "@/components/cards/statistics-card";
 import { TaskQueue } from "@/components/dashboard/task-queue";
 import { PageHeader } from "@/components/layout/page-header";
-import { MapShell } from "@/components/map/map-shell";
+const MapShell = dynamic(
+  () => import("@/components/map/map-shell").then((m) => m.MapShell),
+  { ssr: false }
+);
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StatusBadge } from "@/components/ui/status-badge";
